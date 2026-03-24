@@ -1,0 +1,9 @@
+{
+	"info": { "name": "API_QA_Project", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
+	"item": [
+		{ "name": "TASK_TYPE_QUERY_A", "request": { "method": "GET", "url": { "raw": "{{base_url}}/data/priority?size=10", "host": ["{{base_url}}"], "path": ["data", "priority"], "query": [{ "key": "size", "value": "10" }] } }, "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Check Count', () => pm.expect(pm.response.json().length).to.be.at.most(10));"] } }] },
+		{ "name": "TASK_TYPE_MODIFY_B", "request": { "method": "PATCH", "url": { "raw": "{{base_url}}/account/status-sync/:id", "host": ["{{base_url}}"], "path": ["account", "status-sync", ":id"], "variable": [{ "key": "id", "value": "user_001" }] }, "body": { "mode": "raw", "raw": "{\"next_state\": \"active\"}", "options": { "raw": { "language": "json" } } } } },
+		{ "name": "TASK_TYPE_OVERWRITE_C", "request": { "method": "PUT", "url": { "raw": "{{base_url}}/logistics/destination/:orderId", "host": ["{{base_url}}"], "path": ["logistics", "destination", ":orderId"], "variable": [{ "key": "orderId", "value": "ORD-2026-001" }] }, "body": { "mode": "raw", "raw": "{\"addr_modified\": \"서울특별시 중구 세종대로 110\"}", "options": { "raw": { "language": "json" } } } } },
+		{ "name": "TASK_TYPE_FILTER_D", "request": { "method": "GET", "url": { "raw": "{{base_url}}/content/search?q=Love", "host": ["{{base_url}}"], "path": ["content", "search"], "query": [{ "key": "q", "value": "Love" }] } } }
+	]
+}
