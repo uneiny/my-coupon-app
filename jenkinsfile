@@ -1,0 +1,63 @@
+pipeline {
+    agent any
+
+    environment {
+        // 젠킨스 Global Tool Configuration에서 설정한 Node.js 이름을 넣으세요
+        NODEJS_HOME = tool 'Nodejs' 
+        // 윈도우는 세미콜론(;)으로 경로를 구분합니다
+        PATH = "${NODEJS_HOME};${env.PATH}"
+        SLACK_CHANNEL = '#api-test-notifications'
+    }
+
+    stages {
+        stage('1. 환경 준비') {
+            steps {
+                echo '>>> 패키지 설치 중...'
+                // 윈도우에서는 sh 대신 bat을 사용합니다
+                bat 'npm install'
+                bat 'npm install -g newman newman-reporter-htmlextra'
+            }
+        }
+
+        stage('2. 서버 가동') {
+            steps {
+                echo '>>> 서버 실행 중...'
+                // 윈도우에서 백그라운드 실행은 start /B를 사용합니다
+                bat 'start /B node server.js'
+                sleep 5
+            }
+        }
+
+        stage('3. 테스트 실행') {
+            steps {
+                echo '>>> API 테스트 시작...'
+                bat 'newman run collection.json -e env.json -r htmlextra --reporter-htmlextra-export results/api-report.html'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo '>>> 결과 저장 및 정리 중...'
+            archiveArtifacts artifacts: 'results/*.html', fingerprint: true
+            // 윈도우에서 실행 중인 노드 프로세스를 강제 종료하는 명령어입니다
+            bat 'taskkill /F /IM node.exe /T || exit 0'
+        }
+        
+        success {
+            slackSend(
+               // channel: "${SLACK_CHANNEL}",
+                color: 'good',
+                message: "✅ 빌드 성공! [${env.JOB_NAME} #${env.BUILD_NUMBER}]\n결과: ${env.BUILD_URL}artifact/results/api-report.html"
+            )
+        }
+
+        failure {
+            slackSend(
+                channel: "${SLACK_CHANNEL}",
+                color: 'danger',
+                message: "❌ 빌드 실패! [${env.JOB_NAME} #${env.BUILD_NUMBER}]\n로그 확인: ${env.BUILD_URL}console"
+            )
+        }
+    }
+}
